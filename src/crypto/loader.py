@@ -3,17 +3,19 @@ from typing import Dict
 from datetime import datetime
 
 from decouple import config
-from google.cloud.storage import Client
+from google.cloud.storage import Client as GCSClient
+from google.cloud.bigquery import Client as BQClient
 
 
 class Loader:
 
     def __init__(self) -> None:
-        self._storage_client = Client()
+        self._gcs_client = GCSClient()
+        self._bq_client = BQClient()
     
     def _get_bucket(self) -> str:
         bucket_name = config("BUCKET", cast=str)
-        bucket = self._storage_client.bucket(bucket_name)
+        bucket = self._gcs_client.bucket(bucket_name)
         return bucket
 
     def create_blob(self, data: Dict) -> None:
@@ -23,3 +25,6 @@ class Loader:
 
         with blob.open("w") as file:
             file.write(json.dumps(data))
+
+    def load_tables():
+        pass
