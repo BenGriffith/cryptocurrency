@@ -8,7 +8,7 @@ from google.cloud.storage.bucket import Bucket
 from google.cloud.storage.blob import Blob
 
 
-class Transformer:
+class Transform:
 
     def __init__(self) -> None:
         self._blob_client = BlobClient()
@@ -35,5 +35,5 @@ class Transformer:
 
 
 if __name__ == "__main__":
-    transformer = Transformer()
-    transformer._get_blob()
+    transform = Transform()
+    transform._get_blob()
