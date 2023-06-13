@@ -2,10 +2,10 @@ def test_valid_api_request(coinmarket_response):
     status = coinmarket_response["status"]
     assert status["error_code"] == 0
     assert status["error_message"] == None
-    assert status["credit_count"] == 25
+    assert status["credit_count"] == 1
 
     data = coinmarket_response["data"]
-    assert len(data) == 5000
+    assert len(data) == 100
 
     for crypto in data:
         if crypto["name"] == "Bitcoin":
