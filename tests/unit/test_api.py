@@ -1,20 +1,30 @@
-def test_valid_api_request(coinmarket_response):
-    status = coinmarket_response["status"]
+import requests
+
+def test_valid_api_request(mocker, coinmarket_valid_response):
+    mocker.patch("requests.get", return_value=coinmarket_valid_response)
+    response = requests.get("https://api.coinmarket.com/v2/cryptocurrency")
+    assert response.status_code == 200
+
+    status = response.json.return_value["status"]
     assert status["error_code"] == 0
-    assert status["error_message"] == None
+    assert status["error_message"] == ""
     assert status["credit_count"] == 1
 
-    data = coinmarket_response["data"]
-    assert len(data) == 100
+    data = response.json.return_value["data"]
+    assert len(data) == 2
 
-    for crypto in data:
-        if crypto["name"] == "Bitcoin":
-            assert crypto["symbol"] == "BTC"
-            assert crypto["slug"] == "bitcoin"
+    for _, crypto_details in data.items():
+        if crypto_details["name"] == "Bitcoin":
+            assert crypto_details["symbol"] == "BTC"
+            assert crypto_details["slug"] == "bitcoin"
 
 
-def test_invalid_api_request(coinmarket_invalid_response):
-    status = coinmarket_invalid_response["status"]
+def test_invalid_api_request(mocker, coinmarket_invalid_response):
+    mocker.patch("requests.get", return_value=coinmarket_invalid_response)
+    response = requests.get("https://api.coinmarket.com/v2/cryptocurrency")
+    assert response.status_code == 401
+
+    status = response.json.return_value["status"]
     assert status["error_code"] == 1002
     assert status["error_message"] == "API key missing."
     assert status["credit_count"] == 0
