@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  load:
+    image: load_crypto
+    container_name: load_crypto
+    build:
+      context: ./
+      dockerfile: ./containers/load/Dockerfile
+    environment:
+      - COINMARKET_API_KEY=${COINMARKET_API_KEY}
+      - BUCKET=${BUCKET}
+      - CLOUD_STORAGE=${CLOUD_STORAGE}
+    volumes:
+      - ./service_account:/code/service_account/
+
+  transform:
+    image: transform_crypto
+    container_name: transform_crypto
+    build:
+      context: ./
+      dockerfile: ./containers/transform/Dockerfile
+    environment:
+      - CLOUD_STORAGE=${CLOUD_STORAGE}
+      - BIGQUERY=${BIGQUERY}
+    volumes:
+      - ./service_account:/code/service_account/
