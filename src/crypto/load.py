@@ -16,8 +16,8 @@ from crypto.utils.helpers import service_credentials
 
 class Load:
 
-    def __init__(self, service_acct: dict, bucket_name: str) -> None:
-        self.client = Client(credentials=service_credentials(service_acct))
+    def __init__(self, client: Client, bucket_name: str) -> None:
+        self.client = client
         self.bucket_name = bucket_name
 
     def bucket(self) -> Bucket:
@@ -37,5 +37,6 @@ if __name__ == "__main__":
     connection = Connection()
     coinmarket_response = connection.request(url=LISTINGS_LATEST_URL)
 
-    load = Load(service_acct=CLOUD_STORAGE, bucket_name=BUCKET)
+    storage_client = Client(credentials=service_credentials(CLOUD_STORAGE))
+    load = Load(client=storage_client, bucket_name=BUCKET)
     load.create_blob(crypto_data=coinmarket_response)

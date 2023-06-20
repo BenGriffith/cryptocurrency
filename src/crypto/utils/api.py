@@ -5,14 +5,14 @@ import requests
 
 class Connection:
 
-    def __init__(self, limit: str = 5000) -> None:
+    def __init__(self, limit: int = 5000) -> None:
         self._api_key = os.getenv("COINMARKET_API_KEY")
-        self._headers = {
+        self.headers = {
             "Accepts": "application/json",
             "X-CMC_PRO_API_KEY": f"{self._api_key}"
         }
-        self._parameters = {
-            "start": "1",
+        self.parameters = {
+            "start": 1,
             "limit": limit,
         }
 

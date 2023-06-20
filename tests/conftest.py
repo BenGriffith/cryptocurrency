@@ -1,13 +1,9 @@
 import pytest
+from unittest.mock import MagicMock
 
-from crypto.utils.api import Connection
-from crypto.utils.constants import (
-    CLOUD_STORAGE, 
-    BUCKET, 
-    Services,
-)
-from crypto.utils.helpers import client
-from crypto.load import Load
+from google.cloud.storage import Client
+from google.cloud.storage.bucket import Bucket
+from google.cloud.storage.blob import Blob
 
 
 @pytest.fixture
@@ -58,19 +54,20 @@ def coinmarket_invalid_response(mocker):
 
 
 @pytest.fixture
-def load():
-    return Load(
-        service=Services.GCS.value,
-        service_acct=CLOUD_STORAGE,
-        bucket=BUCKET,
-    )
+def mock_blob_data():
+    return MagicMock()
 
 
 @pytest.fixture
-def gcs_client():
-    return client(service=Services.GCS.value, service_acct=CLOUD_STORAGE)
+def mock_gcs_client():
+    return MagicMock(spec=Client)
 
 
 @pytest.fixture
-def bucket(gcs_client):
-    return gcs_client.bucket(BUCKET)
+def mock_bucket():
+    return MagicMock(spec=Bucket)
+
+
+@pytest.fixture
+def mock_blob():
+    return MagicMock(spec=Blob)
