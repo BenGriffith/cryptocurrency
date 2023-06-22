@@ -14,14 +14,14 @@ services:
     volumes:
       - ./service_account:/code/service_account/
 
-  transform:
-    image: transform_crypto
-    container_name: transform_crypto
-    build:
-      context: ./
-      dockerfile: ./containers/transform/Dockerfile
-    environment:
-      - CLOUD_STORAGE=${CLOUD_STORAGE}
-      - BIGQUERY=${BIGQUERY}
-    volumes:
-      - ./service_account:/code/service_account/
+  # transform:
+  #   image: transform_crypto
+  #   container_name: transform_crypto
+  #   build:
+  #     context: ./
+  #     dockerfile: ./containers/transform/Dockerfile
+  #   environment:
+  #     - CLOUD_STORAGE=${CLOUD_STORAGE}
+  #     - BIGQUERY=${BIGQUERY}
+  #   volumes:
+  #     - ./service_account:/code/service_account/

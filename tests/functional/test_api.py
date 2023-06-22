@@ -1,8 +1,11 @@
 import requests
 
+MOCK_API_URL = "https://api.coinmarket.com/v2/cryptocurrency"
+
+
 def test_valid_api_request(mocker, coinmarket_valid_response):
     mocker.patch("requests.get", return_value=coinmarket_valid_response)
-    response = requests.get("https://api.coinmarket.com/v2/cryptocurrency")
+    response = requests.get(MOCK_API_URL)
     assert response.status_code == 200
 
     status = response.json.return_value["status"]
@@ -21,7 +24,7 @@ def test_valid_api_request(mocker, coinmarket_valid_response):
 
 def test_invalid_api_request(mocker, coinmarket_invalid_response):
     mocker.patch("requests.get", return_value=coinmarket_invalid_response)
-    response = requests.get("https://api.coinmarket.com/v2/cryptocurrency")
+    response = requests.get(MOCK_API_URL)
     assert response.status_code == 401
 
     status = response.json.return_value["status"]

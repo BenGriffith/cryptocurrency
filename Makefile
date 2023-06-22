@@ -5,4 +5,4 @@ down:
 	docker-compose down
 
 pytest:
-	docker container exec load pytest /code/tests
+	docker container exec load_crypto pytest /code/tests

@@ -1,4 +1,3 @@
-from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
 from google.cloud.storage.blob import Blob
 
