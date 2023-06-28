@@ -1,39 +1,44 @@
 import json
 from datetime import datetime
+from typing import Union
 
-from decouple import config
-from google.cloud.storage import Client as BlobClient
-from google.cloud.bigquery import Client as BigQueryClient
+from google.cloud.storage import Client as CSClient # Cloud Storage Client
+from google.cloud.bigquery import Client as BQClient # BigQuery Client
 from google.cloud.storage.bucket import Bucket
 from google.cloud.storage.blob import Blob
+
+from crypto.utils.helpers import service_credentials
+from crypto.utils.constants import (
+    CLOUD_STORAGE,
+    BIGQUERY,
+)
 
 
 class Transform:
 
-    def __init__(self) -> None:
-        self._blob_client = BlobClient()
-        self._bq_client = BigQueryClient()
-        self._blob = f"{datetime.today().strftime('%Y-%m-%d')}.json"
+    def __init__(self, storage_client: CSClient, bq_client: BQClient, bucket_name: str) -> None:
+        self.storage_client = storage_client
+        self.bq_client = bq_client
+        self.bucket_name = bucket_name
 
-    def _get_bucket(self) -> Bucket:
-        bucket_name = config("BUCKET", cast=str)
-        bucket = self._blob_client.get_bucket(bucket_name)
-        return bucket
+    def bucket(self) -> Bucket:
+        return self.storage_client.bucket(bucket_name=self.bucket_name)
+    
+    def blob(self, blob_name: str) -> Blob:
+        return self.bucket().blob(blob_name=blob_name)
 
-    def _get_blob(self) -> Blob:
-        bucket = self._get_bucket()
-        blob = bucket.blob(self._blob)
+
+    # TODO check to see if blob exists before reading
+
+
+    def read_blob(self) -> dict:
+        blob_name = f"{datetime.today().strftime('%Y-%m-%d')}.json"
+        blob = self.blob(blob_name=blob_name)
         with blob.open("r") as file:
             crypto_data = json.loads(file.read())
         return crypto_data
-
-    def _load_facts(self) -> None:
-        pass
-
-    def _load_dimensions(self) -> None:
-        pass
-
+    
 
 if __name__ == "__main__":
-    transform = Transform()
-    transform._get_blob()
+    storage_client = CSClient(credentials=service_credentials(CLOUD_STORAGE))
+    bq_client = BQClient(credentials=service_credentials(BIGQUERY))
