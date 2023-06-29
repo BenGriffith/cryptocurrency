@@ -1,6 +1,6 @@
 import json
+import calendar
 from datetime import datetime
-from typing import Union
 
 from google.cloud.storage import Client as CSClient # Cloud Storage Client
 from google.cloud.bigquery import Client as BQClient # BigQuery Client
@@ -9,6 +9,7 @@ from google.cloud.storage.blob import Blob
 
 from crypto.utils.helpers import service_credentials
 from crypto.utils.constants import (
+    BUCKET,
     CLOUD_STORAGE,
     BIGQUERY,
 )
@@ -36,7 +37,23 @@ class Transform:
             return crypto_data
         return {}
     
+    def load_weekday_dim(self):
+        weekday_names = list(calendar.day_name)
+        weekday_keys = range(1, len(weekday_names) + 1)
+        records = list(zip(weekday_keys, weekday_names))
+        table = self.bq_client.get_table()
+        self.bq_client.insert_rows(table=, rows=records, selected_fields=table.schema)
+
+    def load_month_dim(self):
+        pass
+
+    def load_date_dim(self):
+        pass
+
 
 if __name__ == "__main__":
     storage_client = CSClient(credentials=service_credentials(CLOUD_STORAGE))
     bq_client = BQClient(credentials=service_credentials(BIGQUERY))
+
+    transform = Transform(storage_client=storage_client, bq_client=bq_client, bucket_name=BUCKET)
+    transform.load_weekday_dim()
