@@ -27,16 +27,14 @@ class Transform:
     def blob(self, blob_name: str) -> Blob:
         return self.bucket().blob(blob_name=blob_name)
 
-
-    # TODO check to see if blob exists before reading
-
-
     def read_blob(self) -> dict:
         blob_name = f"{datetime.today().strftime('%Y-%m-%d')}.json"
         blob = self.blob(blob_name=blob_name)
-        with blob.open("r") as file:
-            crypto_data = json.loads(file.read())
-        return crypto_data
+        if blob.exists():
+            with blob.open("r") as file:
+                crypto_data = json.loads(file.read())
+            return crypto_data
+        return {}
     
 
 if __name__ == "__main__":
