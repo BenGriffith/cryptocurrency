@@ -12,6 +12,9 @@ from crypto.utils.constants import (
     BUCKET,
     CLOUD_STORAGE,
     BIGQUERY,
+    DAY_DIM,
+    MONTH_DIM,
+    INITIAL_LOAD
 )
 
 
@@ -37,23 +40,34 @@ class Transform:
             return crypto_data
         return {}
     
-    def load_weekday_dim(self):
-        weekday_names = list(calendar.day_name)
-        weekday_keys = range(1, len(weekday_names) + 1)
-        records = list(zip(weekday_keys, weekday_names))
-        table = self.bq_client.get_table()
-        self.bq_client.insert_rows(table=, rows=records, selected_fields=table.schema)
-
-    def load_month_dim(self):
+    def day_dim_rows(self) -> list:
+        day_names = list(calendar.day_name)
+        day_keys = range(1, len(day_names) + 1)
+        rows = list(zip(day_keys, day_names))
+        return rows
+    
+    def month_dim_rows(self) -> list:
+        month_names = list(calendar.month_name)[1:]
+        month_keys = range(1, len(month_names) + 1)
+        rows = list(zip(month_keys, month_names))
+        return rows
+    
+    def _date_dim_row(self) -> list:
         pass
-
-    def load_date_dim(self):
-        pass
-
+    
+    def load_table(self, table_id: str, rows: list) -> None:
+        table = self.bq_client.get_table(table=table_id)
+        self.bq_client.insert_rows(table=table_id, rows=rows, selected_fields=table.schema)
+        
 
 if __name__ == "__main__":
     storage_client = CSClient(credentials=service_credentials(CLOUD_STORAGE))
     bq_client = BQClient(credentials=service_credentials(BIGQUERY))
 
     transform = Transform(storage_client=storage_client, bq_client=bq_client, bucket_name=BUCKET)
-    transform.load_weekday_dim()
+
+    if INITIAL_LOAD:
+        day_dim_rows = transform.day_dim_rows()
+        month_dim_rows = transform.month_dim_rows()
+        transform.load_table(table_id=DAY_DIM, rows=day_dim_rows)
+        transform.load_table(table_id=MONTH_DIM, rows=month_dim_rows)
