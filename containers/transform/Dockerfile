@@ -15,13 +15,13 @@ RUN pip install -r requirements.txt
 COPY ./ /code/
 
 # copy to the cron.d directory
-COPY /scheduler/load_crypto /etc/cron.d/load_crypto
+COPY /scheduler/transform_crypto /etc/cron.d/transform_crypto
 
 # execution rights on cron job
-RUN chmod 0644 /etc/cron.d/load_crypto
+RUN chmod 0644 /etc/cron.d/transform_crypto
 
 # apply cron job
-RUN crontab /etc/cron.d/load_crypto
+RUN crontab /etc/cron.d/transform_crypto
 
 # create the log to be able to run tail
 RUN touch /var/log/cron.log

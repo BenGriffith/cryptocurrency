@@ -127,7 +127,10 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-service_account/
+service_account/bigquery.json
+service_account/cloud-storage.json
+terraform/.*
+terraform/terra*
 
 # Spyder project settings
 .spyderproject

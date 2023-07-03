@@ -1,4 +1,8 @@
 import json
+import functools
+from pathlib import Path
+
+from decouple import config
 
 from google.oauth2 import service_account
 from google.oauth2.service_account import Credentials
@@ -11,3 +15,15 @@ def parse_service_account_file(path: str) -> dict:
     with open(path, mode="r") as file:
         service_account_info = json.load(file)
     return service_account_info
+
+def service_account_absolute_path(service_account: str) -> str:
+    return f"{Path.cwd().parent.parent.parent}{config(service_account)}"
+
+def time_period(func):
+    @functools.wraps(func)
+    def wrapper(*args):
+        time_period_names = func(*args)
+        time_period_keys = range(1, len(time_period_names) + 1)
+        rows = list(zip(time_period_keys, time_period_names))
+        return rows
+    return wrapper
