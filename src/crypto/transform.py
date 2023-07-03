@@ -7,7 +7,7 @@ from google.cloud.bigquery import Client as BQClient # BigQuery Client
 from google.cloud.storage.bucket import Bucket
 from google.cloud.storage.blob import Blob
 
-from crypto.utils.helpers import service_credentials
+from crypto.utils.helpers import service_credentials, time_period
 from crypto.utils.constants import (
     BUCKET,
     CLOUD_STORAGE,
@@ -40,17 +40,13 @@ class Transform:
             return crypto_data
         return {}
     
+    @time_period
     def day_dim_rows(self) -> list:
-        day_names = list(calendar.day_name)
-        day_keys = range(1, len(day_names) + 1)
-        rows = list(zip(day_keys, day_names))
-        return rows
+        return list(calendar.day_name)
     
+    @time_period
     def month_dim_rows(self) -> list:
-        month_names = list(calendar.month_name)[1:]
-        month_keys = range(1, len(month_names) + 1)
-        rows = list(zip(month_keys, month_names))
-        return rows
+        return list(calendar.month_name)[1:]
     
     def _date_dim_row(self) -> list:
         pass
