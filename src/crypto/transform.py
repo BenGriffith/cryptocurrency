@@ -1,5 +1,6 @@
 import json
 import calendar
+from dateutil.relativedelta import relativedelta
 from datetime import datetime
 
 from google.cloud.storage import Client as CSClient # Cloud Storage Client
@@ -14,7 +15,8 @@ from crypto.utils.constants import (
     BIGQUERY,
     DAY_DIM,
     MONTH_DIM,
-    INITIAL_LOAD
+    DATE_DIM,
+    INITIAL_LOAD,
 )
 
 
@@ -40,6 +42,10 @@ class Transform:
             return crypto_data
         return {}
     
+    def load_table(self, table_id: str, rows: list) -> None:
+        table = self.bq_client.get_table(table=table_id)
+        self.bq_client.insert_rows(table=table_id, rows=rows, selected_fields=table.schema)
+    
     @time_period
     def day_dim_rows(self) -> list:
         return list(calendar.day_name)
@@ -48,12 +54,18 @@ class Transform:
     def month_dim_rows(self) -> list:
         return list(calendar.month_name)[1:]
     
-    def _date_dim_row(self) -> list:
-        pass
-    
-    def load_table(self, table_id: str, rows: list) -> None:
-        table = self.bq_client.get_table(table=table_id)
-        self.bq_client.insert_rows(table=table_id, rows=rows, selected_fields=table.schema)
+    def date_dim_row(self) -> list:
+        d = datetime.today()
+        date_key = f"{d:%Y-%m-%d}"
+        year = d.year
+        month_key = d.month
+        day = d.day
+        day_key = d.isoweekday()
+        week_number = d.isocalendar().week
+        week_end_date = d.fromisocalendar(year, week_number, 7).date()
+        month_end_date = (d + relativedelta(day=31)).date()
+
+        return [(date_key, year, month_key, day, day_key, week_number, week_end_date, month_end_date)]
         
 
 if __name__ == "__main__":
@@ -67,3 +79,7 @@ if __name__ == "__main__":
         month_dim_rows = transform.month_dim_rows()
         transform.load_table(table_id=DAY_DIM, rows=day_dim_rows)
         transform.load_table(table_id=MONTH_DIM, rows=month_dim_rows)
+
+    # date dimension
+    date_dim_row = transform.date_dim_row()
+    transform.load_table(table_id=DATE_DIM, rows=date_dim_row)
