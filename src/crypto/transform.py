@@ -25,13 +25,14 @@ class Transform:
     def __init__(self, storage_client: CSClient, bq_client: BQClient, bucket_name: str) -> None:
         self.storage_client = storage_client
         self.bq_client = bq_client
-        self.bucket_name = bucket_name
+        self._bucket = self.storage_client.bucket(bucket_name=bucket_name)
 
+    @property
     def bucket(self) -> Bucket:
-        return self.storage_client.bucket(bucket_name=self.bucket_name)
+        return self._bucket
     
     def blob(self, blob_name: str) -> Blob:
-        return self.bucket().blob(blob_name=blob_name)
+        return self.bucket.blob(blob_name=blob_name)
 
     def read_blob(self) -> dict:
         blob_name = f"{datetime.today().strftime('%Y-%m-%d')}.json"
@@ -83,3 +84,7 @@ if __name__ == "__main__":
     # date dimension
     date_dim_row = transform.date_dim_row()
     transform.load_table(table_id=DATE_DIM, rows=date_dim_row)
+
+    crypto_data = transform.read_blob()
+
+    # name dimension

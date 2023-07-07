@@ -18,13 +18,14 @@ class Load:
 
     def __init__(self, client: Client, bucket_name: str) -> None:
         self.client = client
-        self.bucket_name = bucket_name
+        self._bucket = self.client.bucket(bucket_name=bucket_name)
 
+    @property
     def bucket(self) -> Bucket:
-        return self.client.bucket(bucket_name=self.bucket_name)
+        return self._bucket
     
     def blob(self, blob_name: str) -> Blob:
-        return self.bucket().blob(blob_name=blob_name)
+        return self.bucket.blob(blob_name=blob_name)
 
     def create_blob(self, crypto_data: dict) -> None:
         blob_name = f"{datetime.today().strftime('%Y-%m-%d')}.json"
