@@ -84,39 +84,3 @@ def mock_blob():
 @pytest.fixture
 def mock_bq_client():
     return MagicMock(spec=BQClient)
-
-
-@pytest.fixture
-@time_period
-def time_period_days():
-    day_names = list(calendar.day_name)
-    return day_names   
-
-
-@pytest.fixture
-def days_keys_names(time_period_days):
-    rows = time_period_days
-    keys, names = [], []
-    for row in rows:
-        key, name = row
-        keys.append(key)
-        names.append(name)
-    return keys, names
-
-
-@pytest.fixture
-def months_keys_names(time_period_months):
-    rows = time_period_months
-    keys, names = [], []
-    for row in rows:
-        key, name = row
-        keys.append(key)
-        names.append(name)
-    return keys, names
-
-
-@pytest.fixture
-@time_period
-def time_period_months():
-    month_names = list(calendar.month_name)[1:]
-    return month_names

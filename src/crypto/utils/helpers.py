@@ -18,12 +18,3 @@ def parse_service_account_file(path: str) -> dict:
 
 def service_account_absolute_path(service_account: str) -> str:
     return f"{Path.cwd().parent.parent.parent}{config(service_account)}"
-
-def time_period(func):
-    @functools.wraps(func)
-    def wrapper(*args):
-        time_period_names = func(*args)
-        time_period_keys = range(1, len(time_period_names) + 1)
-        rows = list(zip(time_period_keys, time_period_names))
-        return rows
-    return wrapper
