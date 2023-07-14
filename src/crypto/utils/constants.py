@@ -16,4 +16,5 @@ DATASET = config("DATASET", cast=str)
 DAY_DIM = f"{PROJECT_ID}.{DATASET}.{config('DAY_DIM', cast=str)}"
 MONTH_DIM = f"{PROJECT_ID}.{DATASET}.{config('MONTH_DIM', cast=str)}"
 DATE_DIM = f"{PROJECT_ID}.{DATASET}.{config('DATE_DIM', cast=str)}"
+NAME_DIM = f"{PROJECT_ID}.{DATASET}.{config('NAME_DIM', cast=str)}"
 INITIAL_LOAD = config("INITIAL_LOAD", cast=bool)

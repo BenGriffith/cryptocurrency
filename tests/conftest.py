@@ -1,17 +1,10 @@
 import pytest
-import calendar
 from unittest.mock import MagicMock
 
 from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
 from google.cloud.storage.blob import Blob
 from google.cloud.bigquery import Client as BQClient
-
-from crypto.utils.helpers import time_period
-
-
-DAYS = "Monday Tuesday Wednesday Thursday Friday Saturday Sunday".split(" ")
-MONTHS = "January February March April May June July August September October November December".split(" ")
 
 
 @pytest.fixture
