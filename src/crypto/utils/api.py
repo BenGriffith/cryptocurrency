@@ -16,6 +16,6 @@ class Connection:
         }
 
     def request(self, url: str) -> dict:
-        response = requests.get(url, headers=self._headers, params=self._parameters)
+        response = requests.get(url, headers=self.headers, params=self.parameters)
         data = response.json()
         return data
