@@ -5,7 +5,7 @@ from datetime import datetime
 
 from google.cloud.storage import Client as CSClient # Cloud Storage Client
 from google.cloud.bigquery import Client as BQClient # BigQuery Client
-from google.cloud.bigquery import LoadJobConfig
+from google.cloud.bigquery import LoadJobConfig, QueryJob
 from google.cloud.storage.bucket import Bucket
 from google.cloud.storage.blob import Blob
 
@@ -20,8 +20,9 @@ from crypto.utils.constants import (
     DATE_DIM,
     INITIAL_LOAD,
     NAME_DIM,
+    TAG_DIM
 )
-from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim
+from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim
 
 
 class Transform:
@@ -39,7 +40,7 @@ class Transform:
         return self.bucket.blob(blob_name=blob_name)
 
     def read_blob(self) -> dict:
-        blob_name = f"{datetime.today().strftime('%Y-%m-%d')}.json" # for testing
+        blob_name = "2023-07-12.json" #f"{datetime.today().strftime('%Y-%m-%d')}.json"
         blob = self.blob(blob_name=blob_name)
         if blob.exists():
             with blob.open("r") as file:
@@ -91,24 +92,60 @@ class Transform:
         )._asdict()
         return [row]
     
-    def _get_name_dim_keys(self):
-        query = """SELECT DISTINCT symbol FROM {name_dim}""".format(name_dim=NAME_DIM)
+    def _query(self, query: str) -> QueryJob:
         job = self.bq_client.query(query=query)
         result = job.result()
         return result
 
-    def name_dim_rows(self, crypto_data: dict) -> None:
-        result = self._get_name_dim_keys()
-        symbols = [row["symbol"] for row in result]
+    def _get_existing_symbols(self) -> list:
+        symbol_query = """SELECT symbol FROM {name_dim}""".format(name_dim=NAME_DIM)
+        result = self._query(query=symbol_query)
+        return [row["symbol"] for row in result]
 
+    def name_dim_rows(self, crypto_data: dict) -> list:
+        existing_symbols = self._get_existing_symbols()
         rows = []
         for row in crypto_data:
-            if row["symbol"] in symbols:
+            if row["symbol"] in existing_symbols:
                 continue
             name_dim = NameDim(name_key=row["name"], symbol=row["symbol"], slug=row["slug"])
             rows.append(name_dim._asdict())
         return rows
 
+    def _get_existing_tags(self) -> list:
+        tag_query = """SELECT tag FROM {tag_dim}""".format(tag_dim=TAG_DIM)
+        result = self._query(query=tag_query)
+        return [row["tag"] for row in result]
+
+    def _get_tags(self, crypto_data: dict, existing_tags: list) -> set:
+        tags = set()
+        for row in crypto_data:
+            for tag in row["tags"]:
+                if tag in existing_tags:
+                    continue
+                tags.add(tag)
+        return tags
+    
+    def _get_tag_key_max(self):
+        tag_query = """SELECT MAX(tag_key) AS max_key FROM {tag_dim}""".format(tag_dim=TAG_DIM)
+        result = self._query(query=tag_query)
+        return [row["max_key"] for row in result][0]
+    
+    def tag_dim_rows(self, crypto_data: dict) -> list:
+        existing_tags = self._get_existing_tags()
+        tags = self._get_tags(crypto_data=crypto_data, existing_tags=existing_tags)
+        
+        max_key = 0
+        if tags and not INITIAL_LOAD:
+            max_key = self._get_tag_key_max()
+
+        rows = []
+        start = max_key if max_key else 1        
+        for key, tag in enumerate(tags, start=start):
+            tag_dim = TagDim(tag_key=key, tag=tag)
+            rows.append(tag_dim._asdict())
+        return rows
+            
 
 if __name__ == "__main__":
     storage_client = CSClient(credentials=service_credentials(CLOUD_STORAGE))
@@ -132,4 +169,9 @@ if __name__ == "__main__":
         # name dimension
         name_dim_rows = transform.name_dim_rows(crypto_data=crypto_data)
         if name_dim_rows:
-            transform.load_table(table_id=NAME_DIM, rows=name_dim_rows
+            transform.load_table(table_id=NAME_DIM, rows=name_dim_rows)
+
+        # tag dimension
+        tag_dim_rows = transform.tag_dim_rows(crypto_data=crypto_data)
+        if tag_dim_rows:
+            transform.load_table(table_id=TAG_DIM, rows=tag_dim_rows)
