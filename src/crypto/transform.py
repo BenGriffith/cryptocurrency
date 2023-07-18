@@ -1,7 +1,7 @@
 import json
 import calendar
 from dateutil.relativedelta import relativedelta
-from datetime import datetime
+from datetime import datetime, date
 
 from google.cloud.storage import Client as CSClient # Cloud Storage Client
 from google.cloud.bigquery import Client as BQClient # BigQuery Client
@@ -20,9 +20,10 @@ from crypto.utils.constants import (
     DATE_DIM,
     INITIAL_LOAD,
     NAME_DIM,
-    TAG_DIM
+    TAG_DIM,
+    NAME_TAG_BRIDGE
 )
-from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim
+from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim, NameTag
 
 
 class Transform:
@@ -145,6 +146,27 @@ class Transform:
             tag_dim = TagDim(tag_key=key, tag=tag)
             rows.append(tag_dim._asdict())
         return rows
+
+    def name_tag_bridge_table(self, date_key: date, crypto_data: dict) -> list:
+        query = """SELECT tag_key, tag FROM {tag_dim}""".format(tag_dim=TAG_DIM)
+        tag_dim = {row["tag_key"]: row["tag"] for row in self._query(query=query)}
+        
+        # partition by date
+        # for each date name can have zero or many tags
+        # for each name look to see if it has any tags
+        # loop through tags
+        # look up tag name in tag dim to fetch key
+
+        rows = []     
+        for row in crypto_data:
+            name = row["name"]
+            tags = row["tags"]
+            if tags:
+                for tag in tags:
+                    tag_key = [key for key, value in tag_dim.items() if value == tag][0]
+                    name_tag = NameTag(name_key=name, date_key=date_key, tag_key=tag_key)._asdict()
+                    rows.append(name_tag)
+        return rows
             
 
 if __name__ == "__main__":
@@ -160,6 +182,7 @@ if __name__ == "__main__":
 
     # date dimension
     date_dim_row = transform.date_dim_row()
+    date_key = date_dim_row[0]["date_key"]
     transform.load_table(table_id=DATE_DIM, rows=date_dim_row)
 
     crypto_data = transform.read_blob()
@@ -175,3 +198,8 @@ if __name__ == "__main__":
         tag_dim_rows = transform.tag_dim_rows(crypto_data=crypto_data)
         if tag_dim_rows:
             transform.load_table(table_id=TAG_DIM, rows=tag_dim_rows)
+
+        # name tag bridge
+
+        name_tag_rows = transform.name_tag_bridge_table(date_key=date_key, crypto_data=crypto_data)
+        transform.load_table(table_id=NAME_TAG_BRIDGE, rows=name_tag_rows)

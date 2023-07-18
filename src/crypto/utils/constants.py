@@ -17,4 +17,6 @@ DAY_DIM = f"{PROJECT_ID}.{DATASET}.{config('DAY_DIM', cast=str)}"
 MONTH_DIM = f"{PROJECT_ID}.{DATASET}.{config('MONTH_DIM', cast=str)}"
 DATE_DIM = f"{PROJECT_ID}.{DATASET}.{config('DATE_DIM', cast=str)}"
 NAME_DIM = f"{PROJECT_ID}.{DATASET}.{config('NAME_DIM', cast=str)}"
+TAG_DIM = f"{PROJECT_ID}.{DATASET}.{config('TAG_DIM', cast=str)}"
+NAME_TAG_BRIDGE = f"{PROJECT_ID}.{DATASET}.{config('NAME_TAG')}"
 INITIAL_LOAD = config("INITIAL_LOAD", cast=bool)
