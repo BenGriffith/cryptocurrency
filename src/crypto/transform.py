@@ -22,9 +22,10 @@ from crypto.utils.constants import (
     NAME_DIM,
     TAG_DIM,
     NAME_TAG_BRIDGE,
-    QUOTE_DIM
+    QUOTE_DIM,
+    PRICE_FACT,
 )
-from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim, NameTag, QuoteDim
+from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim, NameTag, QuoteDim, PriceFact
 
 
 class Transform:
@@ -167,9 +168,15 @@ class Transform:
         rows = []
         for row in crypto_data:
             quote_dim = QuoteDim(name_key=row["name"], date_key=date_key, quote=[row["quote"]])
-            #breakpoint()
             rows.append(quote_dim._asdict())
-            #breakpoint()
+        return rows
+    
+    def price_fact_rows(self, date_key: date, crypto_data: dict) -> list:
+        rows = []
+        for row in crypto_data:
+            price = round(row["quote"]["USD"]["price"], 5)
+            price_fact = PriceFact(name_key=row["name"], date_key=date_key, price=price)
+            rows.append(price_fact._asdict())
         return rows
             
 
@@ -212,3 +219,8 @@ if __name__ == "__main__":
         quote_dim_rows = transform.quote_dim_rows(date_key=date_key, crypto_data=crypto_data)
         if quote_dim_rows:
             transform.load_table(table_id=QUOTE_DIM, rows=quote_dim_rows)
+
+        # price fact
+        price_fact_rows = transform.price_fact_rows(date_key=date_key, crypto_data=crypto_data)
+        if price_fact_rows:
+            transform.load_table(table_id=PRICE_FACT, rows=price_fact_rows)
