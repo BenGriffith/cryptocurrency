@@ -21,9 +21,10 @@ from crypto.utils.constants import (
     INITIAL_LOAD,
     NAME_DIM,
     TAG_DIM,
-    NAME_TAG_BRIDGE
+    NAME_TAG_BRIDGE,
+    QUOTE_DIM
 )
-from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim, NameTag
+from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim, NameTag, QuoteDim
 
 
 class Transform:
@@ -150,12 +151,6 @@ class Transform:
     def name_tag_bridge_table(self, date_key: date, crypto_data: dict) -> list:
         query = """SELECT tag_key, tag FROM {tag_dim}""".format(tag_dim=TAG_DIM)
         tag_dim = {row["tag_key"]: row["tag"] for row in self._query(query=query)}
-        
-        # partition by date
-        # for each date name can have zero or many tags
-        # for each name look to see if it has any tags
-        # loop through tags
-        # look up tag name in tag dim to fetch key
 
         rows = []     
         for row in crypto_data:
@@ -166,6 +161,15 @@ class Transform:
                     tag_key = [key for key, value in tag_dim.items() if value == tag][0]
                     name_tag = NameTag(name_key=name, date_key=date_key, tag_key=tag_key)._asdict()
                     rows.append(name_tag)
+        return rows
+    
+    def quote_dim_rows(self, date_key: date, crypto_data: dict) -> list:
+        rows = []
+        for row in crypto_data:
+            quote_dim = QuoteDim(name_key=row["name"], date_key=date_key, quote=[row["quote"]])
+            #breakpoint()
+            rows.append(quote_dim._asdict())
+            #breakpoint()
         return rows
             
 
@@ -200,6 +204,11 @@ if __name__ == "__main__":
             transform.load_table(table_id=TAG_DIM, rows=tag_dim_rows)
 
         # name tag bridge
-
         name_tag_rows = transform.name_tag_bridge_table(date_key=date_key, crypto_data=crypto_data)
-        transform.load_table(table_id=NAME_TAG_BRIDGE, rows=name_tag_rows)
+        if name_tag_rows:
+            transform.load_table(table_id=NAME_TAG_BRIDGE, rows=name_tag_rows)
+
+        # quote dimension
+        quote_dim_rows = transform.quote_dim_rows(date_key=date_key, crypto_data=crypto_data)
+        if quote_dim_rows:
+            transform.load_table(table_id=QUOTE_DIM, rows=quote_dim_rows)

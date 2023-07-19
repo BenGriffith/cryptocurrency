@@ -13,10 +13,11 @@ BIGQUERY = parse_service_account_file(BIGQUERY_ABSOLUTE)
 BUCKET = config("BUCKET", cast=str)
 PROJECT_ID = config("PROJECT_ID", cast=str)
 DATASET = config("DATASET", cast=str)
-DAY_DIM = f"{PROJECT_ID}.{DATASET}.{config('DAY_DIM', cast=str)}"
-MONTH_DIM = f"{PROJECT_ID}.{DATASET}.{config('MONTH_DIM', cast=str)}"
-DATE_DIM = f"{PROJECT_ID}.{DATASET}.{config('DATE_DIM', cast=str)}"
-NAME_DIM = f"{PROJECT_ID}.{DATASET}.{config('NAME_DIM', cast=str)}"
-TAG_DIM = f"{PROJECT_ID}.{DATASET}.{config('TAG_DIM', cast=str)}"
+DAY_DIM = f"{PROJECT_ID}.{DATASET}.{config('DAY_DIM')}"
+MONTH_DIM = f"{PROJECT_ID}.{DATASET}.{config('MONTH_DIM')}"
+DATE_DIM = f"{PROJECT_ID}.{DATASET}.{config('DATE_DIM')}"
+NAME_DIM = f"{PROJECT_ID}.{DATASET}.{config('NAME_DIM')}"
+TAG_DIM = f"{PROJECT_ID}.{DATASET}.{config('TAG_DIM')}"
 NAME_TAG_BRIDGE = f"{PROJECT_ID}.{DATASET}.{config('NAME_TAG')}"
+QUOTE_DIM = f"{PROJECT_ID}.{DATASET}.{config('QUOTE_DIM')}"
 INITIAL_LOAD = config("INITIAL_LOAD", cast=bool)

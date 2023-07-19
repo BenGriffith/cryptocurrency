@@ -6,3 +6,4 @@ DateDim = namedtuple(typename="DateDim", field_names="date_key year month_key da
 NameDim = namedtuple(typename="NameDim", field_names="name_key symbol slug")
 TagDim = namedtuple(typename="TagDim", field_names="tag_key tag")
 NameTag = namedtuple(typename="NameTag", field_names="name_key date_key tag_key")
+QuoteDim = namedtuple(typename="QuoteDim", field_names="name_key date_key quote")
