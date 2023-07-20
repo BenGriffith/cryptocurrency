@@ -24,8 +24,10 @@ from crypto.utils.constants import (
     NAME_TAG_BRIDGE,
     QUOTE_DIM,
     PRICE_FACT,
+    SUPPLY_FACT,
+
 )
-from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim, NameTag, QuoteDim, PriceFact
+from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim, NameTag, QuoteDim, PriceFact, SupplyFact
 
 
 class Transform:
@@ -178,6 +180,18 @@ class Transform:
             price_fact = PriceFact(name_key=row["name"], date_key=date_key, price=price)
             rows.append(price_fact._asdict())
         return rows
+    
+    def supply_fact_rows(self, date_key: date, crypto_data: dict) -> list:
+        rows = []
+        for row in crypto_data:
+            supply_fact = SupplyFact(
+                name_key=row["name"],
+                date_key=date_key,
+                circulating=round(row["circulating_supply"], 5),
+                total=round(row["total_supply"], 5)
+            )
+            rows.append(supply_fact._asdict())
+        return rows
             
 
 if __name__ == "__main__":
@@ -224,3 +238,8 @@ if __name__ == "__main__":
         price_fact_rows = transform.price_fact_rows(date_key=date_key, crypto_data=crypto_data)
         if price_fact_rows:
             transform.load_table(table_id=PRICE_FACT, rows=price_fact_rows)
+
+        # supply fact
+        supply_fact_rows = transform.supply_fact_rows(date_key=date_key, crypto_data=crypto_data)
+        if supply_fact_rows:
+            transform.load_table(table_id=SUPPLY_FACT, rows=supply_fact_rows)
