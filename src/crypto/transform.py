@@ -25,9 +25,10 @@ from crypto.utils.constants import (
     QUOTE_DIM,
     PRICE_FACT,
     SUPPLY_FACT,
-
+    RANK_FACT,
+    TRADING_VOLUME_DAY_FACT,
 )
-from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim, NameTag, QuoteDim, PriceFact, SupplyFact
+from crypto.utils.setup import DayDim, MonthDim, DateDim, NameDim, TagDim, NameTag, QuoteDim, PriceFact, SupplyFact, RankFact, TradingFact
 
 
 class Transform:
@@ -192,6 +193,28 @@ class Transform:
             )
             rows.append(supply_fact._asdict())
         return rows
+    
+    def rank_fact_rows(self, date_key: date, crypto_data: dict) -> list:
+        rows = []
+        for row in crypto_data:
+            rank_fact = RankFact(
+                name_key=row["name"],
+                date_key=date_key,
+                rank=row["cmc_rank"]
+            )
+            rows.append(rank_fact._asdict())
+        return rows
+    
+    def trading_volume_fact_rows(self, date_key: date, crypto_data: dict) -> list:
+        rows = []
+        for row in crypto_data:
+            trading_fact = TradingFact(
+                name_key=row["name"],
+                date_key=date_key,
+                volume=round(row["quote"]["USD"]["volume_24h"], 5)
+            )
+            rows.append(trading_fact._asdict())
+        return rows
             
 
 if __name__ == "__main__":
@@ -243,3 +266,13 @@ if __name__ == "__main__":
         supply_fact_rows = transform.supply_fact_rows(date_key=date_key, crypto_data=crypto_data)
         if supply_fact_rows:
             transform.load_table(table_id=SUPPLY_FACT, rows=supply_fact_rows)
+
+        # rank fact
+        rank_fact_rows = transform.rank_fact_rows(date_key=date_key, crypto_data=crypto_data)
+        if rank_fact_rows:
+            transform.load_table(table_id=RANK_FACT, rows=rank_fact_rows)
+
+        # trading volume fact
+        trading_volume_fact_rows = transform.trading_volume_fact_rows(date_key=date_key, crypto_data=crypto_data)
+        if trading_volume_fact_rows:
+            transform.load_table(table_id=TRADING_VOLUME_DAY_FACT, rows=trading_volume_fact_rows)

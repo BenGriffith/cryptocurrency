@@ -49,3 +49,13 @@ class SupplyFact(NamedTuple):
     date_key: str
     circulating: float
     total: float
+
+class RankFact(NamedTuple):
+    name_key: str
+    date_key: str
+    rank: int
+
+class TradingFact(NamedTuple):
+    name_key: str
+    date_key: str
+    volume: float
