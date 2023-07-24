@@ -1,6 +1,5 @@
-from collections import namedtuple
-
 from typing import NamedTuple
+
 
 class DayDim(NamedTuple):
     day_key: int
