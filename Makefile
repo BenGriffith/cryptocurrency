@@ -1,8 +1,8 @@
 docker-spin-up:
-	docker-compose --env-file .env up --build -d
+	docker compose --env-file .env up --build -d
 
 down:
-	docker-compose --env-file .env down
+	docker compose --env-file .env down
 
 shell-load:
 	docker container exec -it load_crypto bash
