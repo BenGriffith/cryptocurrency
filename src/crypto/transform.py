@@ -28,7 +28,7 @@ class Transform:
         return self.bucket.blob(blob_name=blob_name)
 
     def read_blob(self) -> dict:
-        blob_name = "2023-07-12.json"#f"{datetime.today().strftime('%Y-%m-%d')}.json"
+        blob_name = f"{datetime.today().strftime('%Y-%m-%d')}.json"
         blob = self.blob(blob_name=blob_name)
         if blob.exists():
             with blob.open("r") as file:
@@ -180,41 +180,33 @@ if __name__ == "__main__":
         crypto_data = crypto_data["data"]
 
         # name dimension
-        name_dim_rows = transform.name_dim_rows(crypto_data=crypto_data)
-        if name_dim_rows:
+        if (name_dim_rows := transform.name_dim_rows(crypto_data=crypto_data)):
             transform.load_table(table_id=Table.NAME_DIM.value, rows=name_dim_rows)
 
         # tag dimension
-        tag_dim_rows = transform.tag_dim_rows(crypto_data=crypto_data)
-        if tag_dim_rows:
+        if (tag_dim_rows := transform.tag_dim_rows(crypto_data=crypto_data)):
             transform.load_table(table_id=Table.TAG_DIM.value, rows=tag_dim_rows)
 
         # name tag bridge
-        name_tag_rows = transform.name_tag_bridge_table(date_key=date_key, crypto_data=crypto_data)
-        if name_tag_rows:
+        if (name_tag_rows := transform.name_tag_bridge_table(date_key=date_key, crypto_data=crypto_data)):
             transform.load_table(table_id=Table.NAME_TAG_BRIDGE.value, rows=name_tag_rows)
 
         # quote dimension
-        quote_dim_rows = transform.quote_dim_rows(date_key=date_key, crypto_data=crypto_data)
-        if quote_dim_rows:
+        if (quote_dim_rows := transform.quote_dim_rows(date_key=date_key, crypto_data=crypto_data)):
             transform.load_table(table_id=Table.QUOTE_DIM.value, rows=quote_dim_rows)
 
         # price fact
-        price_fact_rows = transform.price_fact_rows(date_key=date_key, crypto_data=crypto_data)
-        if price_fact_rows:
+        if (price_fact_rows := transform.price_fact_rows(date_key=date_key, crypto_data=crypto_data)):
             transform.load_table(table_id=Table.PRICE_FACT.value, rows=price_fact_rows)
 
         # supply fact
-        supply_fact_rows = transform.supply_fact_rows(date_key=date_key, crypto_data=crypto_data)
-        if supply_fact_rows:
+        if (supply_fact_rows := transform.supply_fact_rows(date_key=date_key, crypto_data=crypto_data)):
             transform.load_table(table_id=Table.SUPPLY_FACT.value, rows=supply_fact_rows)
 
         # rank fact
-        rank_fact_rows = transform.rank_fact_rows(date_key=date_key, crypto_data=crypto_data)
-        if rank_fact_rows:
+        if (rank_fact_rows := transform.rank_fact_rows(date_key=date_key, crypto_data=crypto_data)):
             transform.load_table(table_id=Table.RANK_FACT.value, rows=rank_fact_rows)
 
         # trading volume fact
-        trading_volume_fact_rows = transform.trading_volume_fact_rows(date_key=date_key, crypto_data=crypto_data)
-        if trading_volume_fact_rows:
+        if (trading_volume_fact_rows := transform.trading_volume_fact_rows(date_key=date_key, crypto_data=crypto_data)):
             transform.load_table(table_id=Table.TRADING_VOLUME_DAY_FACT.value, rows=trading_volume_fact_rows)
