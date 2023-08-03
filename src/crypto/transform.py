@@ -10,8 +10,8 @@ from google.cloud.storage.bucket import Bucket
 from google.cloud.storage.blob import Blob
 
 from crypto.utils.helpers import service_credentials
-from crypto.utils.constants import Project, Table
-from crypto.utils.setup import *
+from crypto.utils.constants import Project, Table, Queries, ROUNDING
+
 
 class Transform:
 
@@ -28,7 +28,7 @@ class Transform:
         return self.bucket.blob(blob_name=blob_name)
 
     def read_blob(self) -> dict:
-        blob_name = f"{datetime.today().strftime('%Y-%m-%d')}.json"
+        blob_name = "2023-07-12.json"#f"{datetime.today().strftime('%Y-%m-%d')}.json"
         blob = self.blob(blob_name=blob_name)
         if blob.exists():
             with blob.open("r") as file:
@@ -53,35 +53,27 @@ class Transform:
         job.result()
     
     def day_dim_rows(self) -> list:
-        rows = []
-        for key, day in enumerate(calendar.day_name, start=1):
-            row = DayDim(day_key=key, name=day)._asdict()
-            rows.append(row)
-        return rows
+        return [{"day_key": key, "name": day} for key, day in enumerate(calendar.day_name, start=1)]
 
     def month_dim_rows(self) -> list:
-        rows = []
-        for key, month in enumerate(list(calendar.month_name)[1:], start=1):
-            row = MonthDim(month_key=key, name=month)._asdict()
-            rows.append(row)
-        return rows
+        return [{"month_key": key, "name": month} for key, month in enumerate(list(calendar.month_name)[1:], start=1)]
     
     def date_dim_row(self) -> list:
         d = datetime.today()
-        row = DateDim(
-            date_key=f"{d:%Y-%m-%d}",
-            year=d.year,
-            month_key=d.month,
-            day=d.day,
-            day_key=d.isoweekday(),
-            week_number=d.isocalendar().week,
-            week_end=d.fromisocalendar(d.year, d.isocalendar().week, 7).strftime('%Y-%m-%d'),
-            month_end=(d + relativedelta(day=31)).strftime("%Y-%m-%d")
-        )._asdict()
+        row = {
+            "date_key" : f"{d:%Y-%m-%d}",
+            "year": d.year,
+            "month_key": d.month,
+            "day": d.day,
+            "day_key": d.isoweekday(),
+            "week_number": d.isocalendar().week,
+            "week_end": d.fromisocalendar(d.year, d.isocalendar().week, 7).strftime('%Y-%m-%d'),
+            "month_end": (d + relativedelta(day=31)).strftime("%Y-%m-%d"),
+        }
         return [row]
 
     def name_dim_rows(self, crypto_data: dict) -> list:
-        existing_symbols_query = """SELECT symbol FROM {name_dim}""".format(name_dim=Table.NAME_DIM.value)
+        existing_symbols_query = Queries.symbols.value
         result = self.bq_client.query(query=existing_symbols_query).result()
         existing_symbols = set(row["symbol"] for row in result)
 
@@ -89,8 +81,7 @@ class Transform:
         for row in crypto_data:
             if row["symbol"] in existing_symbols:
                 continue
-            name_dim = NameDim(name_key=row["name"], symbol=row["symbol"], slug=row["slug"])
-            rows.append(name_dim._asdict())
+            rows.append({"name_key": row["name"], "symbol": row["symbol"], "slug": row["slug"]})
         return rows
 
     def _get_tags(self, crypto_data: dict, existing_tags: set) -> set:
@@ -103,7 +94,7 @@ class Transform:
         return tags
     
     def tag_dim_rows(self, crypto_data: dict) -> list:
-        existing_tags_query = """SELECT tag FROM {tag_dim}""".format(tag_dim=Table.TAG_DIM.value)
+        existing_tags_query = Queries.tags.value
         result = self.bq_client.query(query=existing_tags_query).result()
         existing_tags = set(row["tag"] for row in result)
 
@@ -111,19 +102,18 @@ class Transform:
         
         max_key = 0
         if tags and not Project.INITIAL_LOAD.value:
-            tag_query = """SELECT MAX(tag_key) AS max_key FROM {tag_dim}""".format(tag_dim=Table.TAG_DIM.value)
+            tag_query = Queries.max_key.value
             result = self.bq_client.query(query=tag_query).result()
             max_key = [row["max_key"] for row in result][0]
 
         rows = []
         start = max_key if max_key else 1        
         for key, tag in enumerate(tags, start=start):
-            tag_dim = TagDim(tag_key=key, tag=tag)
-            rows.append(tag_dim._asdict())
+            rows.append({"tag_key": key, "tag": tag})
         return rows
 
     def name_tag_bridge_table(self, date_key: date, crypto_data: dict) -> list:
-        tag_query = """SELECT tag_key, tag FROM {tag_dim}""".format(tag_dim=Table.TAG_DIM.value)
+        tag_query = Queries.tag_key.value
         result = self.bq_client.query(query=tag_query).result()
         tag_dim = {row["tag_key"]: row["tag"] for row in result}
 
@@ -131,60 +121,41 @@ class Transform:
         for row in crypto_data:
             name = row["name"]
             tags = row["tags"]
-            if tags:
-                for tag in tags:
-                    tag_key = [key for key, value in tag_dim.items() if value == tag][0]
-                    name_tag = NameTag(name_key=name, date_key=date_key, tag_key=tag_key)._asdict()
-                    rows.append(name_tag)
+            
+            if not tags:
+                continue
+            
+            for tag in tags:
+                tag_key = [key for key, value in tag_dim.items() if value == tag][0]
+                rows.append({"name_key": name, "date_key": date_key, "tag_key": tag_key})
         return rows
     
     def quote_dim_rows(self, date_key: date, crypto_data: dict) -> list:
-        rows = []
-        for row in crypto_data:
-            quote_dim = QuoteDim(name_key=row["name"], date_key=date_key, quote=[row["quote"]])
-            rows.append(quote_dim._asdict())
-        return rows
+        return [{"name_key": row["name"], "date_key": date_key, "quote": [row["quote"]]} for row in crypto_data]
     
     def price_fact_rows(self, date_key: date, crypto_data: dict) -> list:
         rows = []
         for row in crypto_data:
-            price = round(row["quote"]["USD"]["price"], 5)
-            price_fact = PriceFact(name_key=row["name"], date_key=date_key, price=price)
-            rows.append(price_fact._asdict())
+            price = round(row["quote"]["USD"]["price"], ROUNDING)
+            rows.append({"name_key": row["name"], "date_key": date_key, "price": price})
         return rows
     
     def supply_fact_rows(self, date_key: date, crypto_data: dict) -> list:
         rows = []
         for row in crypto_data:
-            supply_fact = SupplyFact(
-                name_key=row["name"],
-                date_key=date_key,
-                circulating=round(row["circulating_supply"], 5),
-                total=round(row["total_supply"], 5)
-            )
-            rows.append(supply_fact._asdict())
+            circulating = round(row["circulating_supply"], ROUNDING)
+            total = round(row["total_supply"], ROUNDING)
+            rows.append({"name_key": row["name"], "date_key": date_key, "circulating": circulating, "total": total})
         return rows
     
     def rank_fact_rows(self, date_key: date, crypto_data: dict) -> list:
-        rows = []
-        for row in crypto_data:
-            rank_fact = RankFact(
-                name_key=row["name"],
-                date_key=date_key,
-                rank=row["cmc_rank"]
-            )
-            rows.append(rank_fact._asdict())
-        return rows
+        return [{"name_key": row["name"], "date_key": date_key, "rank": row["cmc_rank"]} for row in crypto_data]
     
     def trading_volume_fact_rows(self, date_key: date, crypto_data: dict) -> list:
         rows = []
         for row in crypto_data:
-            trading_fact = TradingFact(
-                name_key=row["name"],
-                date_key=date_key,
-                volume=round(row["quote"]["USD"]["volume_24h"], 5)
-            )
-            rows.append(trading_fact._asdict())
+            volume = round(row["quote"]["USD"]["volume_24h"], ROUNDING)
+            rows.append({"name_key": row["name"], "date_key": date_key, "volume": volume})
         return rows
             
 
