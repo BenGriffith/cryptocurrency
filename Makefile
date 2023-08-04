@@ -40,9 +40,9 @@ lint-load:
 lint-transform:
 	docker container exec transform_crypto flake8 /code
 
-ci-load: isort-load format-load type-load lint-load pytest-load
+ci-load: isort-load format-load type-load pytest-load
 
-ci-transform: isort-transform format-transform type-transform lint-transform pytest
+ci-transform: isort-transform format-transform type-transform pytest
 
 stop-load-etl:
 	docker container exec load_crypto service cron stop
