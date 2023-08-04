@@ -25,6 +25,9 @@ isort-transform:
 pytest-load:
 	docker container exec load_crypto pytest /code/tests/functional/test_api.py /code/tests/functional/test_load.py
 
+pytest-transform:
+	docker container exec load_transform pytest /code/tests
+
 type-load:
 	docker container exec load_crypto mypy --ignore-missing-imports /code
 
