@@ -18,11 +18,11 @@ class Transform:
     def __init__(self, storage_client: CSClient, bq_client: BQClient, bucket_name: str) -> None:
         self.storage_client = storage_client
         self.bq_client = bq_client
-        self._bucket = self.storage_client.bucket(bucket_name=bucket_name)
+        self.bucket_name = bucket_name
 
     @property
     def bucket(self) -> Bucket:
-        return self._bucket
+        return self.storage_client.bucket(bucket_name=self.bucket_name)
     
     def blob(self, blob_name: str) -> Blob:
         return self.bucket.blob(blob_name=blob_name)

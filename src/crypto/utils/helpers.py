@@ -1,5 +1,4 @@
 import json
-import functools
 from pathlib import Path
 
 from decouple import config
