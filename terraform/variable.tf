@@ -1,13 +1,19 @@
 variable "cloud_storage_credentials" {
     description = "Google Cloud Storage credentials"
     type = string
-    default = "/service_account/cloud_storage.json"
+    default = "/service_account/cloud-storage.json"
 }
 
 variable "bigquery_credentials" {
     description = "Google Cloud BigQuery credentials"
     type = string
     default = "/service_account/bigquery.json"
+}
+
+variable "compute_engine_credentials" {
+    description = "Google Cloud Compute Engine credentials"
+    type = string
+    default = "/service_account/compute-engine.json"
 }
 
 variable "google_project" {
@@ -25,7 +31,7 @@ variable "google_region" {
 variable "google_bucket" {
     description = "Google Cloud bucket"
     type = string
-    default = ""
+    default = "projects-cryptocurrency"
 }
 
 variable "bigquery_dataset" {
@@ -64,9 +70,9 @@ variable "month_dim" {
     default = "month_dim"
 }
 
-variable "weekday_dim" {
+variable "day_dim" {
     type = string
-    default = "weekday_dim"
+    default = "day_dim"
 }
 
 variable "price_fact" {
@@ -87,4 +93,34 @@ variable "supply_fact" {
 variable "rank_fact" {
     type = string
     default = "rank_fact"
+}
+
+variable "machine_type" {
+    type = string
+    default = "e2-medium"
+}
+
+variable "zone" {
+    type = string
+    default = "us-central1-a"
+}
+
+variable "image" {
+    type = string
+    default = "ubuntu-os-cloud/ubuntu-2004-lts"
+}
+
+variable "coinmarket" {
+    type = string
+    default = ""
+}
+
+variable "coinmarket_latest_listings" {
+    type = string
+    default = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
+}
+
+variable "repo" {
+    type = string
+    default = "https://github.com/BenGriffith/cryptocurrency.git"
 }

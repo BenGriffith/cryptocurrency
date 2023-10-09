@@ -7,7 +7,7 @@ from crypto.load import Load
 def test_bucket(mock_gcs_client, mock_bucket):
     load = Load(client=mock_gcs_client, bucket_name="test-bucket")
     mock_gcs_client.bucket.return_value = mock_bucket
-    assert isinstance(load.bucket(), Bucket)
+    assert isinstance(load.bucket, Bucket)
 
 
 def test_blob(mock_gcs_client, mock_bucket, mock_blob):

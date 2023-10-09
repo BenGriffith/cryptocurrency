@@ -7,6 +7,8 @@ from crypto.utils.helpers import (
     service_account_absolute_path,
 )
 
+ROUNDING = 5
+
 class Project(Enum):
     LISTINGS_LATEST_URL = config("LISTINGS_LATEST_URL", cast=str)
     CLOUD_STORAGE_ABSOLUTE = service_account_absolute_path("CLOUD_STORAGE")
@@ -32,3 +34,10 @@ class Table(Enum):
     SUPPLY_FACT = f"{Project.TABLE_QUALIFIER.value}.{config('SUPPLY_FACT')}"
     RANK_FACT = f"{Project.TABLE_QUALIFIER.value}.{config('RANK_FACT')}"
     TRADING_VOLUME_DAY_FACT = f"{Project.TABLE_QUALIFIER.value}.{config('TRADING_VOLUME_DAY_FACT')}"
+
+
+class Queries(Enum):
+    symbols = "SELECT symbol FROM {name_dim}".format(name_dim=Table.NAME_DIM.value)
+    tags = "SELECT tag FROM {tag_dim}".format(tag_dim=Table.TAG_DIM.value)
+    max_key = "SELECT MAX(tag_key) AS max_key FROM {tag_dim}".format(tag_dim=Table.TAG_DIM.value)
+    tag_key =  "SELECT tag_key, tag FROM {tag_dim}".format(tag_dim=Table.TAG_DIM.value)

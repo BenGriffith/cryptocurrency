@@ -1,0 +1,15 @@
+name: CI
+on: [pull_request]
+jobs:
+  run-ci-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > /home/runner/work/cryptocurrency/cryptocurrency/.env
+      - name: Spin up containers
+        run: make docker-spin-up
+      - name: Run CI test
+        run: make ci-load

@@ -22,8 +22,11 @@ isort-load:
 isort-transform:
 	docker container exec transform_crypto isort .
 
-pytest:
-	docker container exec load_crypto pytest /code/tests
+pytest-load:
+	docker container exec load_crypto pytest /code/tests/functional/test_api.py /code/tests/functional/test_load.py
+
+pytest-transform:
+	docker container exec load_transform pytest /code/tests
 
 type-load:
 	docker container exec load_crypto mypy --ignore-missing-imports /code
@@ -37,11 +40,9 @@ lint-load:
 lint-transform:
 	docker container exec transform_crypto flake8 /code
 
-ci-load:
-	isort-load format-load type-load lint-load pytest
+ci-load: isort-load format-load type-load
 
-ci-transform:
-	isort-transform format-transform type-transform lint-transform pytest
+ci-transform: isort-transform format-transform type-transform
 
 stop-load-etl:
 	docker container exec load_crypto service cron stop

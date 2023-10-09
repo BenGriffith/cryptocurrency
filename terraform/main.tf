@@ -21,6 +21,13 @@ provider "google" {
   region = var.google_region
 }
 
+provider "google" {
+  alias = "compute_engine_provider"
+  credentials = var.compute_engine_credentials
+  project = var.google_project
+  region = var.google_region
+}
+
 resource "google_storage_bucket" "bucket" {
   name = var.google_bucket
   project = var.google_project
@@ -44,11 +51,6 @@ resource "google_bigquery_table" "name_dim" {
 [
   {
     "name": "name_key",
-    "type": "INTEGER",
-    "mode": "NULLABLE"
-  },
-  {
-    "name": "name",
     "type": "STRING",
     "mode": "NULLABLE"
   },
@@ -94,11 +96,16 @@ resource "google_bigquery_table" "name_tag" {
   project = var.google_project
   deletion_protection = false
 
+  time_partitioning {
+    type = "DAY"
+    field = "date_key"
+  }
+
   schema = <<EOF
 [
   {
     "name": "name_key",
-    "type": "INTEGER",
+    "type": "STRING",
     "mode": "NULLABLE"
   },
   {
@@ -124,14 +131,13 @@ resource "google_bigquery_table" "quote_dim" {
   time_partitioning {
     type = "DAY"
     field = "date_key"
-    require_partition_filter = true
   }
 
   schema = <<EOF
 [
   {
     "name": "name_key",
-    "type": "INTEGER",
+    "type": "STRING",
     "mode": "NULLABLE"
   },
   {
@@ -177,7 +183,7 @@ resource "google_bigquery_table" "date_dim" {
     "mode": "NULLABLE"
   },
   {
-    "name": "weekday_key",
+    "name": "day_key",
     "type": "INTEGER",
     "mode": "NULLABLE"
   },
@@ -222,16 +228,16 @@ resource "google_bigquery_table" "month_dim" {
 EOF
 }
 
-resource "google_bigquery_table" "weekday_dim" {
+resource "google_bigquery_table" "day_dim" {
   dataset_id = google_bigquery_dataset.dataset.dataset_id
-  table_id = var.weekday_dim
+  table_id = var.day_dim
   project = var.google_project
   deletion_protection = false
 
   schema = <<EOF
 [
   {
-    "name": "weekday_key",
+    "name": "day_key",
     "type": "INTEGER",
     "mode": "NULLABLE"
   },
@@ -253,14 +259,13 @@ resource "google_bigquery_table" "price_fact" {
   time_partitioning {
     type = "DAY"
     field = "date_key"
-    require_partition_filter = true
   }
 
   schema = <<EOF
 [
   {
     "name": "name_key",
-    "type": "INTEGER",
+    "type": "STRING",
     "mode": "NULLABLE"
   },
   {
@@ -286,14 +291,13 @@ resource "google_bigquery_table" "trading_volume_day_fact" {
   time_partitioning {
     type = "DAY"
     field = "date_key"
-    require_partition_filter = true
   }
 
   schema = <<EOF
   [
     {
       "name": "name_key",
-      "type": "INTEGER",
+      "type": "STRING",
       "mode": "NULLABLE"
     },
     {
@@ -303,7 +307,7 @@ resource "google_bigquery_table" "trading_volume_day_fact" {
     },
     {
       "name": "volume",
-      "type": "INTEGER",
+      "type": "FLOAT",
       "mode": "NULLABLE"
     }
   ]
@@ -319,14 +323,13 @@ resource "google_bigquery_table" "supply_fact" {
   time_partitioning {
     type = "DAY"
     field = "date_key"
-    require_partition_filter = true
   }
 
   schema = <<EOF
   [
     {
       "name": "name_key",
-      "type": "INTEGER",
+      "type": "STRING",
       "mode": "NULLABLE"
     },
     {
@@ -336,17 +339,12 @@ resource "google_bigquery_table" "supply_fact" {
     },
     {
       "name": "circulating",
-      "type": "INTEGER",
+      "type": "FLOAT",
       "mode": "NULLABLE"
     },
     {
       "name": "total",
-      "type": "INTEGER",
-      "mode": "NULLABLE"
-    },
-    {
-      "name": "max",
-      "type": "INTEGER",
+      "type": "FLOAT",
       "mode": "NULLABLE"
     }
   ]
@@ -362,14 +360,13 @@ resource "google_bigquery_table" "rank_fact" {
   time_partitioning {
     type = "DAY"
     field = "date_key"
-    require_partition_filter = true
   }
 
   schema = <<EOF
   [
     {
       "name": "name_key",
-      "type": "INTEGER",
+      "type": "STRING",
       "mode": "NULLABLE"
     },
     {
@@ -384,4 +381,108 @@ resource "google_bigquery_table" "rank_fact" {
     }
   ]
   EOF
+}
+
+resource "google_compute_instance" "crypto_instance" {
+  name = "crypto-instance"
+  machine_type = var.machine_type
+  project = var.google_project
+  zone = var.zone
+  
+  boot_disk {
+    initialize_params {
+      image = var.image
+    }
+  }
+
+  metadata = {
+    startup-script = <<-EOF
+      echo "-------------------------START SETUP---------------------------"
+      sudo apt-get -y update
+
+      sudo apt-get -y install \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release
+
+      sudo apt -y install unzip
+
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+      sudo apt-get -y update
+      sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+      sudo chmod 666 /var/run/docker.sock
+
+      sudo apt install make
+
+      echo 'Clone git repo to GCE'
+      cd /home/ubuntu && git clone ${var.repo}
+
+      echo 'CD to cryptocurrency directory'
+      cd cryptocurrency
+      mv .env-template .env
+
+      sed -i 's/COINMARKET_API_KEY=/COINMARKET_API_KEY=${var.coinmarket}/' .env
+      sed -i 's,LISTINGS_LATEST_URL=,LISTINGS_LATEST_URL=${var.coinmarket_latest_listings},' .env
+      sed -i 's/BUCKET=/BUCKET=${var.google_bucket}/' .env
+      sed -i 's,CLOUD_STORAGE=,CLOUD_STORAGE=${var.cloud_storage_credentials},' .env
+      sed -i 's,BIGQUERY=,BIGQUERY=${var.bigquery_credentials},' .env
+      sed -i 's/PROJECT_ID=/PROJECT_ID=${var.google_project}/' .env
+
+      echo 'Start containers'
+      make docker-spin-up
+
+      echo "-------------------------END SETUP---------------------------"
+    EOF
+  }
+
+  network_interface {
+    network = google_compute_network.vpc_network.self_link
+    access_config {
+    }
+  }
+
+}
+
+resource "google_compute_network" "vpc_network" {
+  name = "crypto-network"
+  project = var.google_project
+  auto_create_subnetworks = true
+}
+
+resource "google_compute_firewall" "ingress_firewall_rule" {
+  name        = "allow-http-https-ingress"
+  network     = google_compute_network.vpc_network.name
+  project     = var.google_project
+
+  direction   = "INGRESS"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+}
+
+resource "google_compute_firewall" "egress_firewall_rule" {
+  name        = "allow-http-https-egress"
+  network     = google_compute_network.vpc_network.name
+  project     = var.google_project
+
+  direction   = "EGRESS"
+
+  allow {
+    protocol = "icmp"
+  }
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "443", "8080"]
+  }
 }
