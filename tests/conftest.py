@@ -1,3 +1,6 @@
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
 import pytest
 from unittest.mock import MagicMock
 
@@ -5,6 +8,8 @@ from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
 from google.cloud.storage.blob import Blob
 from google.cloud.bigquery import Client as BQClient
+
+from crypto.transform import Transform
 
 
 @pytest.fixture
@@ -77,3 +82,27 @@ def mock_blob():
 @pytest.fixture
 def mock_bq_client():
     return MagicMock(spec=BQClient)
+
+
+@pytest.fixture
+def transform(mock_gcs_client, mock_bq_client):
+    return Transform(
+        storage_client=mock_gcs_client,
+        bq_client=mock_bq_client,
+        bucket_name="project-cryptocurrency"
+    )
+
+
+@pytest.fixture
+def date_dim_rows():
+    today = datetime.today()
+    return {
+        "date_key": today.strftime("%Y-%m-%d"),
+        "year": today.year,
+        "month_key": today.month,
+        "day": today.day,
+        "day_key": today.isoweekday(),
+        "week_number": today.isocalendar().week,
+        "week_end": today.fromisocalendar(today.year, today.isocalendar().week, 7).strftime("%Y-%m-%d"),
+        "month_end": (today + relativedelta(day=31)).strftime("%Y-%m-%d")
+    }

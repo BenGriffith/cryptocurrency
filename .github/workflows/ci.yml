@@ -11,5 +11,7 @@ jobs:
           echo "${{ secrets.ENV_FILE }}" > /home/runner/work/cryptocurrency/cryptocurrency/.env
       - name: Spin up containers
         run: make docker-spin-up
-      - name: Run CI test
+      - name: Run CI Load
         run: make ci-load
+      - name: Run CI Transform
+        run: make ci-transform

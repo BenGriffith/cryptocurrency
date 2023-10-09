@@ -14,7 +14,7 @@ def test_bucket(mock_gcs_client, mock_bq_client, mock_bucket):
         )
 
     mock_gcs_client.bucket.return_value = mock_bucket
-    assert isinstance(transform.bucket(), Bucket)
+    assert isinstance(transform.bucket, Bucket)
 
 
 def test_blob(mock_gcs_client, mock_bq_client, mock_bucket, mock_blob):
