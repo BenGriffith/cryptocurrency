@@ -32,3 +32,13 @@ def test_month_dim_rows(transform):
 def test_date_dim_row(transform, date_dim_rows):
     rows = transform.date_dim_row()
     rows == [date_dim_rows]
+
+
+def test_tags_exists(transform, crypto_data, tags_all_exist):
+    tags = transform._get_tags(crypto_data, tags_all_exist)
+    assert tags == set()
+
+
+def test_tags_mixture(transform, crypto_data, tags_one_exist):
+    tags = transform._get_tags(crypto_data, tags_one_exist)
+    assert tags == set(["popular", "top10"])
