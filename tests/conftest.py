@@ -164,6 +164,7 @@ def crypto_data():
                 "name": "Ethereum",
                 "symbol": "ETH",
                 "slug": "ethereum",
+                "cmc_rank": 7,
                 "num_market_pairs": 6360,
                 "circulating_supply": 16950100,
                 "total_supply": 16950100,
@@ -265,6 +266,19 @@ def supply_fact_rows(crypto_data, date_key):
             "date_key": date_key,
             "circulating": round(crypto.get("circulating_supply"), ROUNDING),
             "total": round(crypto.get("total_supply"), ROUNDING)
+        }
+        rows.append(row)
+    return rows
+
+
+@pytest.fixture
+def rank_fact_rows(crypto_data, date_key):
+    rows = []
+    for crypto in crypto_data:
+        row = {
+            "name_key": crypto.get("name"),
+            "date_key": date_key,
+            "rank": crypto.get("cmc_rank")
         }
         rows.append(row)
     return rows

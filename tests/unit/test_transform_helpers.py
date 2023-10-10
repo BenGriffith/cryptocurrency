@@ -60,3 +60,8 @@ def test_price_fact_rows(transform, crypto_data, price_fact_rows, date_key):
 def test_supply_fact_rows(transform, crypto_data, supply_fact_rows, date_key):
     rows = transform.supply_fact_rows(date_key=date_key, crypto_data=crypto_data)
     assert rows == supply_fact_rows
+
+
+def test_rank_fact_rows(transform, crypto_data, rank_fact_rows, date_key):
+    rows = transform.rank_fact_rows(date_key=date_key, crypto_data=crypto_data)
+    assert rows == rank_fact_rows
