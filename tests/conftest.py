@@ -282,3 +282,16 @@ def rank_fact_rows(crypto_data, date_key):
         }
         rows.append(row)
     return rows
+
+
+@pytest.fixture
+def trading_volume_fact_rows(crypto_data, date_key):
+    rows = []
+    for crypto in crypto_data:
+        row = {
+            "name_key": crypto.get("name"),
+            "date_key": date_key,
+            "volume": round(crypto.get("quote").get("USD").get("volume_24h"), ROUNDING)
+        }
+        rows.append(row)
+    return rows

@@ -65,3 +65,8 @@ def test_supply_fact_rows(transform, crypto_data, supply_fact_rows, date_key):
 def test_rank_fact_rows(transform, crypto_data, rank_fact_rows, date_key):
     rows = transform.rank_fact_rows(date_key=date_key, crypto_data=crypto_data)
     assert rows == rank_fact_rows
+
+
+def test_trading_volume_fact_rows(transform, crypto_data, trading_volume_fact_rows, date_key):
+    rows = transform.trading_volume_fact_rows(date_key=date_key, crypto_data=crypto_data)
+    assert rows == trading_volume_fact_rows
