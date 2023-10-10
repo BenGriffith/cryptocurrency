@@ -10,6 +10,7 @@ from google.cloud.storage.blob import Blob
 from google.cloud.bigquery import Client as BQClient
 
 from crypto.transform import Transform
+from crypto.utils.constants import ROUNDING
 
 
 @pytest.fixture
@@ -231,6 +232,20 @@ def quote_dim_rows(crypto_data):
             "name_key": crypto.get("name"),
             "date_key": datetime.today().strftime("%Y-%m-%d"),
             "quote": [crypto.get("quote")]
+        }
+        rows.append(row)
+    return rows
+
+
+@pytest.fixture
+def price_fact_rows(crypto_data):
+    rows = []
+    for crypto in crypto_data:
+        price = round(crypto.get("quote").get("USD").get("price"), ROUNDING)
+        row = {
+            "name_key": crypto.get("name"),
+            "date_key": datetime.today().strftime("%Y-%m-%d"),
+            "price": price
         }
         rows.append(row)
     return rows
