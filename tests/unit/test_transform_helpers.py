@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 def test_day_dim_rows(transform):
     rows = transform.day_dim_rows()
     assert rows == [
@@ -31,7 +34,7 @@ def test_month_dim_rows(transform):
 
 def test_date_dim_row(transform, date_dim_rows):
     rows = transform.date_dim_row()
-    rows == [date_dim_rows]
+    assert rows == [date_dim_rows]
 
 
 def test_tags_exists(transform, crypto_data, tags_all_exist):
@@ -42,3 +45,9 @@ def test_tags_exists(transform, crypto_data, tags_all_exist):
 def test_tags_mixture(transform, crypto_data, tags_one_exist):
     tags = transform._get_tags(crypto_data, tags_one_exist)
     assert tags == set(["popular", "top10"])
+
+
+def test_quote_dim_rows(transform, crypto_data, quote_dim_rows):
+    date_key = transform.date_dim_row()[0].get("date_key")
+    rows = transform.quote_dim_rows(date_key=date_key, crypto_data=crypto_data)
+    assert rows == quote_dim_rows

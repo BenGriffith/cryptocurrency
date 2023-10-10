@@ -221,3 +221,16 @@ def tags_all_exist():
 @pytest.fixture
 def tags_one_exist():
     return set(["mineable"])
+
+
+@pytest.fixture
+def quote_dim_rows(crypto_data):
+    rows = []
+    for crypto in crypto_data:
+        row = {
+            "name_key": crypto.get("name"),
+            "date_key": datetime.today().strftime("%Y-%m-%d"),
+            "quote": [crypto.get("quote")]
+        }
+        rows.append(row)
+    return rows
