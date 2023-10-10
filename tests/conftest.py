@@ -225,12 +225,17 @@ def tags_one_exist():
 
 
 @pytest.fixture
-def quote_dim_rows(crypto_data):
+def date_key(transform):
+    return transform.date_dim_row()[0].get("date_key")
+
+
+@pytest.fixture
+def quote_dim_rows(crypto_data, date_key):
     rows = []
     for crypto in crypto_data:
         row = {
             "name_key": crypto.get("name"),
-            "date_key": datetime.today().strftime("%Y-%m-%d"),
+            "date_key": date_key,
             "quote": [crypto.get("quote")]
         }
         rows.append(row)
@@ -238,14 +243,28 @@ def quote_dim_rows(crypto_data):
 
 
 @pytest.fixture
-def price_fact_rows(crypto_data):
+def price_fact_rows(crypto_data, date_key):
     rows = []
     for crypto in crypto_data:
         price = round(crypto.get("quote").get("USD").get("price"), ROUNDING)
         row = {
             "name_key": crypto.get("name"),
-            "date_key": datetime.today().strftime("%Y-%m-%d"),
+            "date_key": date_key,
             "price": price
+        }
+        rows.append(row)
+    return rows
+
+
+@pytest.fixture
+def supply_fact_rows(crypto_data, date_key):
+    rows = []
+    for crypto in crypto_data:
+        row = {
+            "name_key": crypto.get("name"),
+            "date_key": date_key,
+            "circulating": round(crypto.get("circulating_supply"), ROUNDING),
+            "total": round(crypto.get("total_supply"), ROUNDING)
         }
         rows.append(row)
     return rows

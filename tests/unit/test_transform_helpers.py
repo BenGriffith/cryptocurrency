@@ -47,13 +47,16 @@ def test_tags_mixture(transform, crypto_data, tags_one_exist):
     assert tags == set(["popular", "top10"])
 
 
-def test_quote_dim_rows(transform, crypto_data, quote_dim_rows):
-    date_key = transform.date_dim_row()[0].get("date_key")
+def test_quote_dim_rows(transform, crypto_data, quote_dim_rows, date_key):
     rows = transform.quote_dim_rows(date_key=date_key, crypto_data=crypto_data)
     assert rows == quote_dim_rows
 
 
-def test_price_fact_rows(transform, crypto_data, price_fact_rows):
-    date_key = transform.date_dim_row()[0].get("date_key")
+def test_price_fact_rows(transform, crypto_data, price_fact_rows, date_key):
     rows = transform.price_fact_rows(date_key=date_key, crypto_data=crypto_data)
     assert rows == price_fact_rows
+
+
+def test_supply_fact_rows(transform, crypto_data, supply_fact_rows, date_key):
+    rows = transform.supply_fact_rows(date_key=date_key, crypto_data=crypto_data)
+    assert rows == supply_fact_rows
