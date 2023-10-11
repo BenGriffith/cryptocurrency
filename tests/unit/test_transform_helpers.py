@@ -1,4 +1,4 @@
-from datetime import datetime
+from freezegun import freeze_time
 
 
 def test_day_dim_rows(transform):
@@ -33,8 +33,9 @@ def test_month_dim_rows(transform):
 
 
 def test_date_dim_row(transform, date_dim_rows):
-    rows = transform.date_dim_row()
-    assert rows == [date_dim_rows]
+    with freeze_time("2023-08-01"):
+        rows = transform.date_dim_row()
+        assert rows == [date_dim_rows]
 
 
 def test_tags_exists(transform, crypto_data, tags_all_exist):

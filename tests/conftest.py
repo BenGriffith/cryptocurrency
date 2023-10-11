@@ -3,11 +3,11 @@ from dateutil.relativedelta import relativedelta
 
 import pytest
 from unittest.mock import MagicMock
-
 from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
 from google.cloud.storage.blob import Blob
 from google.cloud.bigquery import Client as BQClient
+from freezegun import freeze_time
 
 from crypto.transform import Transform
 from crypto.utils.constants import ROUNDING
@@ -96,7 +96,7 @@ def transform(mock_gcs_client, mock_bq_client):
 
 @pytest.fixture
 def date_dim_rows():
-    today = datetime.today()
+    today = datetime(2023, 8, 1)
     return {
         "date_key": today.strftime("%Y-%m-%d"),
         "year": today.year,
