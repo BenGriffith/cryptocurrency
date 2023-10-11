@@ -3,13 +3,14 @@ from dateutil.relativedelta import relativedelta
 
 import pytest
 from unittest.mock import MagicMock
-
 from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
 from google.cloud.storage.blob import Blob
 from google.cloud.bigquery import Client as BQClient
+from freezegun import freeze_time
 
 from crypto.transform import Transform
+from crypto.utils.constants import ROUNDING
 
 
 @pytest.fixture
@@ -95,7 +96,7 @@ def transform(mock_gcs_client, mock_bq_client):
 
 @pytest.fixture
 def date_dim_rows():
-    today = datetime.today()
+    today = datetime(2023, 8, 1)
     return {
         "date_key": today.strftime("%Y-%m-%d"),
         "year": today.year,
@@ -163,6 +164,7 @@ def crypto_data():
                 "name": "Ethereum",
                 "symbol": "ETH",
                 "slug": "ethereum",
+                "cmc_rank": 7,
                 "num_market_pairs": 6360,
                 "circulating_supply": 16950100,
                 "total_supply": 16950100,
@@ -221,3 +223,75 @@ def tags_all_exist():
 @pytest.fixture
 def tags_one_exist():
     return set(["mineable"])
+
+
+@pytest.fixture
+def date_key(transform):
+    return transform.date_dim_row()[0].get("date_key")
+
+
+@pytest.fixture
+def quote_dim_rows(crypto_data, date_key):
+    rows = []
+    for crypto in crypto_data:
+        row = {
+            "name_key": crypto.get("name"),
+            "date_key": date_key,
+            "quote": [crypto.get("quote")]
+        }
+        rows.append(row)
+    return rows
+
+
+@pytest.fixture
+def price_fact_rows(crypto_data, date_key):
+    rows = []
+    for crypto in crypto_data:
+        price = round(crypto.get("quote").get("USD").get("price"), ROUNDING)
+        row = {
+            "name_key": crypto.get("name"),
+            "date_key": date_key,
+            "price": price
+        }
+        rows.append(row)
+    return rows
+
+
+@pytest.fixture
+def supply_fact_rows(crypto_data, date_key):
+    rows = []
+    for crypto in crypto_data:
+        row = {
+            "name_key": crypto.get("name"),
+            "date_key": date_key,
+            "circulating": round(crypto.get("circulating_supply"), ROUNDING),
+            "total": round(crypto.get("total_supply"), ROUNDING)
+        }
+        rows.append(row)
+    return rows
+
+
+@pytest.fixture
+def rank_fact_rows(crypto_data, date_key):
+    rows = []
+    for crypto in crypto_data:
+        row = {
+            "name_key": crypto.get("name"),
+            "date_key": date_key,
+            "rank": crypto.get("cmc_rank")
+        }
+        rows.append(row)
+    return rows
+
+
+@pytest.fixture
+def trading_volume_fact_rows(crypto_data, date_key):
+    rows = []
+    for crypto in crypto_data:
+        row = {
+            "name_key": crypto.get("name"),
+            "date_key": date_key,
+            "volume": round(crypto.get("quote").get("USD").get("volume_24h"), ROUNDING)
+        }
+        rows.append(row)
+    return rows

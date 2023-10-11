@@ -112,7 +112,7 @@ class Transform:
             rows.append({"tag_key": key, "tag": tag})
         return rows
 
-    def name_tag_bridge_table(self, date_key: date, crypto_data: dict) -> list:
+    def name_tag_bridge_table(self, date_key: str, crypto_data: dict) -> list:
         tag_query = Queries.tag_key.value
         result = self.bq_client.query(query=tag_query).result()
         tag_dim = {row["tag_key"]: row["tag"] for row in result}
@@ -130,17 +130,17 @@ class Transform:
                 rows.append({"name_key": name, "date_key": date_key, "tag_key": tag_key})
         return rows
     
-    def quote_dim_rows(self, date_key: date, crypto_data: dict) -> list:
+    def quote_dim_rows(self, date_key: str, crypto_data: dict) -> list:
         return [{"name_key": row["name"], "date_key": date_key, "quote": [row["quote"]]} for row in crypto_data]
     
-    def price_fact_rows(self, date_key: date, crypto_data: dict) -> list:
+    def price_fact_rows(self, date_key: str, crypto_data: dict) -> list:
         rows = []
         for row in crypto_data:
             price = round(row["quote"]["USD"]["price"], ROUNDING)
             rows.append({"name_key": row["name"], "date_key": date_key, "price": price})
         return rows
     
-    def supply_fact_rows(self, date_key: date, crypto_data: dict) -> list:
+    def supply_fact_rows(self, date_key: str, crypto_data: dict) -> list:
         rows = []
         for row in crypto_data:
             circulating = round(row["circulating_supply"], ROUNDING)
