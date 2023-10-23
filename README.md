@@ -37,7 +37,9 @@ Terraform is used to setup and tear down pipeline components such as GCS bucket,
 - For `CLOUD_STORAGE`, specify the path to the service account key such as /service_account/cloud-storage.json
 - For `BIGQUERY`, specify the path to the service account key such as /service_account/bigquery.json
 9. In `/terraform/variable.tf`, configure `google_project` and `coinmarket` with user-defined values
-10. After completion of the first day, change `INITIAL_LOAD` from `TRUE` to `FALSE` in `.env`
+10. After completion of the first day's run, perform the following:
+- SSH into your Compute Engine instance
+- Access the `transform_crypto` container and in the `.env` file, change `INITIAL_LOAD` from `TRUE` to `FALSE`
 
 #### Setup commands
 ```
