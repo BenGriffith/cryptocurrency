@@ -28,8 +28,15 @@ Terraform is used to setup and tear down pipeline components such as GCS bucket,
 4. Service account for BigQuery
 5. Service account for Compute Engine
 6. Download service account keys and move to `/service_account`
+- For Cloud Storage, name the file `cloud-storage.json`
+- For BigQuery, name the file `bigquery.json`
+- For Compute Engine, name the file `compute-engine.json`
 7. Rename `.env-template` to `.env`
-7. Configure `.env` and `/terraform/variable.tf` with user-defined values
+8. Configure `.env` with user-defined values
+- For `BUCKET`, specify the GCS bucket name
+- For `CLOUD_STORAGE`, specify the path to the service account key such as /service_account/cloud-storage.json
+- For `BIGQUERY`, specify the path to the service account key such as /service_account/bigquery.json
+9. In `/terraform/variable.tf`, configure `google_project` and `coinmarket` with user-defined values
 
 #### Setup commands
 ```
